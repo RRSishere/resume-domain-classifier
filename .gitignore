@@ -1,0 +1,5 @@
+BERT_resume_model/
+__pycache__/
+*.pyc
+.env
+venv/
