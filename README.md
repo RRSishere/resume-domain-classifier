@@ -13,6 +13,17 @@ BERT-based resume classifier with Streamlit UI.
 pip install -r requirements.txt
 streamlit run app.py
 
+## Demo Screenshots
+
+###  Upload Interface
+![Upload UI](images/ui_home.png)
+
+
+
+### Prediction Output
+![Prediction](images/ui_predicted.png)
+
+
 ## Model Download
 
 Model is hosted externally due to GitHub size limits.
