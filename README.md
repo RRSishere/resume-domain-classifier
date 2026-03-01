@@ -16,11 +16,14 @@ streamlit run app.py
 ## Demo Screenshots
 
 ###  Upload Interface
+
 ![Upload UI](images/ui_home.png)
 
 
 
 ### Prediction Output
+
+
 ![Prediction](images/ui_predicted.png)
 
 
@@ -30,7 +33,9 @@ streamlit run app.py
 
 
 
+### Resume used for prediction
 
+demo video link : https://drive.google.com/file/d/1DN_3vWymwdkvrAXx59fDHV0hlkU6IlGw/view?usp=sharing
 
 
 
