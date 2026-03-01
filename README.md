@@ -26,6 +26,14 @@ streamlit run app.py
 ![Prediction](images/ui_predicted2.png)
 
 
+
+### Resume used for prediction
+
+![sample_Resume](images/resume_used.png)
+
+
+
+
 ## Model Comparison
 
 To evaluate performance improvement, a classical machine learning baseline was implemented using Logistic Regression and compared against a fine-tuned BERT model.
