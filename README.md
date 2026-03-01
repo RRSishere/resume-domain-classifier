@@ -23,7 +23,16 @@ streamlit run app.py
 ### Prediction Output
 ![Prediction](images/ui_predicted.png)
 
+
+
+
 ![Prediction](images/ui_predicted2.png)
+
+
+
+
+
+
 
 
 
@@ -34,15 +43,21 @@ streamlit run app.py
 
 
 
+
+
 ## Model Comparison
 
 To evaluate performance improvement, a classical machine learning baseline was implemented using Logistic Regression and compared against a fine-tuned BERT model.
+
+
 
 ###  Logistic Regression (TF-IDF + LR)
 
 - Accuracy: **82.09%**
 - Macro F1 Score: **0.79**
 - Weighted F1 Score: **0.82**
+
+
 
 ###  Fine-Tuned BERT
 
