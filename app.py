@@ -5,83 +5,62 @@ import re
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from pypdf import PdfReader
 import docx
+import pandas as pd
+
+# ================= PAGE CONFIG =================
+st.set_page_config(
+    page_title="Resume Domain Classifier",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# ================= CUSTOM CSS (PRO UI) =================
+st.markdown("""
+<style>
+.main {
+    background-color: #0f172a;
+}
+h1, h2, h3 {
+    color: white;
+}
+.card {
+    background-color:#1e293b;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0px 4px 15px rgba(0,0,0,0.3);
+    margin-bottom:15px;
+}
+.skill-badge {
+    display:inline-block;
+    padding:6px 12px;
+    margin:4px;
+    border-radius:20px;
+    background:#4f46e5;
+    color:white;
+    font-size:13px;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # ================= CONFIG =================
-
 MODEL_PATH = "./BERT_resume_model"
 
-# ================= SKILL EXTRACT =================
-
+# ================= SKILLS =================
 SKILL_KEYWORDS = [
-
-# ---------- Programming ----------
-"python","java","c","c++","c#","go","rust","scala","kotlin","swift",
-"javascript","typescript","php","ruby","matlab","r",
-
-# ---------- Frontend ----------
-"html","css","sass","less","bootstrap","tailwind",
-"react","reactjs","nextjs","vue","vuejs","angular",
-"redux","jquery",
-
-# ---------- Backend ----------
-"node","nodejs","express","nestjs","django","flask","fastapi",
-"spring","spring boot","laravel",".net","asp.net",
-
-# ---------- Mobile ----------
-"android","ios","react native","flutter","xamarin",
-
-# ---------- Databases ----------
-"mysql","postgresql","postgres","mongodb","redis","sqlite",
-"oracle","sql server","cassandra","dynamodb","firebase",
-
-# ---------- Data / ML / AI ----------
-"machine learning","deep learning","nlp","computer vision",
-"pytorch","tensorflow","keras","sklearn","scikit-learn",
-"pandas","numpy","scipy","xgboost","lightgbm",
-"data analysis","data science","feature engineering",
-"bert","transformer","llm","huggingface",
-
-# ---------- Big Data ----------
-"hadoop","spark","pyspark","hive","kafka","airflow",
-
-# ---------- Cloud ----------
-"aws","azure","gcp","google cloud",
-"ec2","s3","lambda","cloudwatch",
-"azure functions","bigquery",
-
-# ---------- DevOps ----------
-"docker","kubernetes","helm",
-"ci/cd","jenkins","github actions","gitlab ci",
-"terraform","ansible",
-
-# ---------- Tools ----------
-"git","github","gitlab","bitbucket",
-"linux","unix","bash","shell scripting",
-"postman","swagger",
-
-# ---------- APIs ----------
-"rest api","graphql","fastapi",
-
-# ---------- Testing ----------
-"unit testing","pytest","jest","selenium","cypress",
-
-# ---------- Analytics ----------
-"power bi","tableau","excel","looker",
-
-# ---------- Security ----------
-"oauth","jwt","cyber security","penetration testing"
+"python","java","c++","javascript","react","node","express",
+"mongodb","mysql","html","css","tensorflow","pytorch",
+"machine learning","deep learning","nlp","aws","docker",
+"kubernetes","git","linux","fastapi","django","flask",
+"power bi","tableau","excel","pandas","numpy"
 ]
 
 def extract_skills(text):
     text_low = text.lower()
-    found = []
-    for skill in SKILL_KEYWORDS:
-        if skill in text_low:
-            found.append(skill.upper())
+    found = [s.upper() for s in SKILL_KEYWORDS if s in text_low]
     return sorted(set(found))
 
-# ================= LOAD MODEL (LOW MEMORY) =================
-
+# ================= LOAD MODEL =================
+@st.cache_resource
 def load_all():
     model = AutoModelForSequenceClassification.from_pretrained(
         MODEL_PATH,
@@ -89,7 +68,7 @@ def load_all():
     )
     tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
 
-    with open(f"{MODEL_PATH}/label_encoder.pkl", "rb") as f:
+    with open(f"{MODEL_PATH}/label_encoder.pkl","rb") as f:
         le = pickle.load(f)
 
     model.eval()
@@ -97,44 +76,39 @@ def load_all():
 
 model, tokenizer, le = load_all()
 
-# ================= SAME CLEANING AS TRAINING =================
-
+# ================= CLEANING =================
 def clean_resume(text):
     text = str(text)
-
     text = re.sub(r"http\S+|\S+@\S+", " ", text)
     text = re.sub(r"\+?\d[\d\s\-]{8,}", " ", text)
-
-    text = text.replace("\n", " ")
-    text = re.sub(r"\s+", " ", text)
+    text = text.replace("\n"," ")
+    text = re.sub(r"\s+"," ",text)
 
     first_line = text[:150]
     text = "TITLE: " + first_line + " BODY: " + text
 
     return text[:6000]
 
-# ================= FILE TEXT EXTRACTION =================
-
+# ================= TEXT EXTRACTION =================
 def extract_text(file):
     name = file.name.lower()
 
     if name.endswith(".pdf"):
         reader = PdfReader(file)
         text = " ".join([p.extract_text() or "" for p in reader.pages])
-        return text, "PDF"
+        return text,"PDF"
 
     if name.endswith(".docx"):
         d = docx.Document(file)
         text = " ".join([p.text for p in d.paragraphs])
-        return text, "DOCX"
+        return text,"DOCX"
 
     if name.endswith(".txt"):
-        return file.read().decode("utf-8"), "TXT"
+        return file.read().decode("utf-8"),"TXT"
 
-    return "", "UNKNOWN"
+    return "","UNKNOWN"
 
 # ================= PREDICTION =================
-
 def predict_top3(text):
 
     text = clean_resume(text)
@@ -150,81 +124,92 @@ def predict_top3(text):
         outputs = model(**inputs)
 
     probs = torch.softmax(outputs.logits, dim=1)[0]
-    topk = torch.topk(probs, 3)
+    topk = torch.topk(probs,3)
 
     labels = le.inverse_transform(topk.indices.tolist())
     scores = topk.values.tolist()
 
-    return list(zip(labels, scores))
+    return list(zip(labels,scores))
 
-# ================= UI =================
+# ================= HERO HEADER =================
+st.markdown("""
+<h1 style='text-align:center;'>AI Resume Domain Classification System</h1>
+<p style='text-align:center;color:#94a3b8;font-size:18px;'>
+Upload Resume → NLP Processing → BERT Prediction → Skill Extraction
+</p>
+""", unsafe_allow_html=True)
 
-st.set_page_config(
-    page_title="Resume Domain Classification System",
-    layout="wide"
-)
+st.divider()
 
-st.title(" Automated Resume Domain Classification System")
-st.caption("Upload resume → Preprocess → BERT Model → Domain Prediction")
-
+# ================= LAYOUT =================
 left, right = st.columns([2,1])
 
-# ---------- LEFT PANEL ----------
-
+# ---------- LEFT ----------
 with left:
 
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+
     uploaded = st.file_uploader(
-        "Upload Resume File",
-        type=["pdf", "docx", "txt"]
+        "Upload Resume (PDF / DOCX / TXT)",
+        type=["pdf","docx","txt"]
     )
 
     if uploaded:
 
         raw_text, ftype = extract_text(uploaded)
+        skills = extract_skills(raw_text)
 
         st.success(f"Detected Format: {ftype}")
 
-        skills = extract_skills(raw_text)
-
-        st.subheader("Extracted Text Preview")
-        st.text_area(
-            "",
-            raw_text[:1500],
-            height=220
-        )
+        st.subheader("Resume Preview")
+        st.text_area("", raw_text[:1500], height=260)
 
         results = predict_top3(raw_text)
         best_label, best_score = results[0]
 
-# ---------- RIGHT PANEL ----------
+    st.markdown("</div>", unsafe_allow_html=True)
 
+# ---------- RIGHT ----------
 with right:
 
     if uploaded:
 
-        st.subheader(" Prediction Results")
+        # Prediction Card
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+
+        st.subheader("Prediction")
 
         st.metric(
-            "Predicted Domain",
-            best_label,
-            f"{best_score*100:.1f}% confidence"
+            label="Predicted Domain",
+            value=best_label,
+            delta=f"{best_score*100:.1f}% confidence"
         )
 
-        st.progress(int(best_score * 100))
+        st.progress(best_score)
 
-        st.subheader("Top 3 Domain Scores")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        for i, (lab, sc) in enumerate(results, 1):
-            st.write(f"{i}. {lab} — {sc*100:.2f}%")
+        # Chart Card
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
 
-        if best_score < 0.50:
-            st.warning("Low confidence — manual review recommended")
+        st.subheader("Top Domain Scores")
 
-        # -------- SKILLS UI --------
+        df = pd.DataFrame(results, columns=["Domain","Score"])
+        st.bar_chart(df.set_index("Domain"))
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # Skills Card
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
 
         st.subheader("Detected Skills")
 
         if skills:
-            st.write(", ".join(skills))
+            badges = "".join(
+                [f"<span class='skill-badge'>{s}</span>" for s in skills]
+            )
+            st.markdown(badges, unsafe_allow_html=True)
         else:
             st.write("No known skills detected")
+
+        st.markdown("</div>", unsafe_allow_html=True)
