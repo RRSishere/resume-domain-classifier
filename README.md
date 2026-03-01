@@ -22,6 +22,7 @@ streamlit run app.py
 
 ### Prediction Output
 ![Prediction](images/ui_predicted.png)
+
 ![Prediction](images/ui_predicted2.png)
 
 
