@@ -33,7 +33,7 @@ streamlit run app.py
 
 
 
-### Resume used for prediction
+### Demo Video 
 
 demo video link : https://drive.google.com/file/d/1DN_3vWymwdkvrAXx59fDHV0hlkU6IlGw/view?usp=sharing
 
