@@ -164,7 +164,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("📄 Automated Resume Domain Classification System")
+st.title(" Automated Resume Domain Classification System")
 st.caption("Upload resume → Preprocess → BERT Model → Domain Prediction")
 
 left, right = st.columns([2,1])
@@ -202,7 +202,7 @@ with right:
 
     if uploaded:
 
-        st.subheader("📊 Prediction Results")
+        st.subheader(" Prediction Results")
 
         st.metric(
             "Predicted Domain",
@@ -222,7 +222,7 @@ with right:
 
         # -------- SKILLS UI --------
 
-        st.subheader("🧠 Detected Skills")
+        st.subheader("Detected Skills")
 
         if skills:
             st.write(", ".join(skills))
